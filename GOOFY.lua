@@ -1,1 +1,36 @@
-local _1=string.char local _2=table.concat local _3=math.randomseed local _4=math.random local _5=game:GetService _3(tick()) local _6=_5("Players") local _7=_5("UserInputService") local _8=_5("RunService") local _9=_6.LocalPlayer local _10=_9:GetMouse() local _11=workspace.CurrentCamera local _12=Instance.new("ScreenGui",game.CoreGui) local _13=Instance.new("TextButton") _13.Parent=_12 _13.Size=UDim2.new(0,100,0,50) _13.Position=UDim2.new(0.5,-50,0.5,-25) _13.Text=_1(65,105,109,108,111,99,107) _13.BackgroundColor3=Color3.fromRGB(255,0,0) _13.TextColor3=Color3.fromRGB(255,255,255) _13.Draggable=true _13.Active=true _13.Selectable=true local _14=false local _15=nil local function _16() local _17=nil local _18=math.huge for _,_19 in pairs(_6:GetPlayers()) do if _19~=_9 and _19.Team~=_9.Team and _19.Character and _19.Character:FindFirstChild("HumanoidRootPart") then local _20=_19.Character.HumanoidRootPart.Position local _21=(_9.Character.HumanoidRootPart.Position-_20).Magnitude if _21<_18 then _18=_21 _17=_19 end end end return _17 end local function _22() _8:BindToRenderStep("Aimlock",Enum.RenderPriority.Camera.Value,function() local _23=_16() if _23 and _23.Character then local _24=_23.Character:FindFirstChild("HumanoidRootPart") if _24 then _11.CFrame=CFrame.new(_11.CFrame.Position,_24.Position) _15=_23 end end end) end local function _25() _14=not _14 _13.BackgroundColor3=_14 and Color3.fromRGB(0,255,0) or Color3.fromRGB(255,0,0) if _14 then _22() else _8:UnbindFromRenderStep("Aimlock") end end _13.MouseButton1Click:Connect(_25) _7.InputBegan:Connect(function(_26,_27) if not _27 and _26.KeyCode==Enum.KeyCode.E then _25() end end)
+local svcs = {Players = game:GetService("Players"), UIS = game:GetService("UserInputService"), RS = game:GetService("RunService")} 
+local plr, cam = svcs.Players.LocalPlayer, workspace.CurrentCamera
+local scrGui, btn = Instance.new("ScreenGui", game.CoreGui), Instance.new("TextButton")
+btn.Parent, btn.Size, btn.Position, btn.Text = scrGui, UDim2.new(0, 100, 0, 50), UDim2.new(0.5, -50, 0.5, -25), "Aimlock"
+btn.BackgroundColor3, btn.TextColor3, btn.Draggable, btn.Active, btn.Selectable = Color3.fromRGB(255, 0, 0), Color3.fromRGB(255, 255, 255), true, true, true
+local locked, target = false, nil
+
+local function getClosest()
+    local closest, dist = nil, math.huge
+    for _, v in pairs(svcs.Players:GetPlayers()) do
+        if v ~= plr and v.Team ~= plr.Team and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+            local mag = (plr.Character.HumanoidRootPart.Position - v.Character.HumanoidRootPart.Position).Magnitude
+            if mag < dist then closest, dist = v, mag end
+        end
+    end
+    return closest
+end
+
+local function lockAim()
+    svcs.RS:BindToRenderStep("Aimlock", Enum.RenderPriority.Camera.Value, function()
+        local newTarget = getClosest()
+        if newTarget and newTarget.Character then
+            local hrp = newTarget.Character:FindFirstChild("HumanoidRootPart")
+            if hrp then cam.CFrame = CFrame.new(cam.CFrame.Position, hrp.Position) target = newTarget end
+        end
+    end)
+end
+
+local function toggleLock()
+    locked = not locked
+    btn.BackgroundColor3 = locked and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
+    if locked then lockAim() else svcs.RS:UnbindFromRenderStep("Aimlock") end
+end
+
+btn.MouseButton1Click:Connect(toggleLock)
+svcs.UIS.InputBegan:Connect(function(input, gpe) if not gpe and input.KeyCode == Enum.KeyCode.E then toggleLock() end end)
