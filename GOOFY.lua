@@ -35,7 +35,7 @@ local function getClosest()
     if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
         local plrPos = plr.Character.HumanoidRootPart.Position
         for _, v in pairs(svcs.Players:GetPlayers()) do
-            if v ~= plr and v.Character then
+            if v ~= plr and v.Character and v.Character:FindFirstChild("Humanoid") and v.Character.Humanoid.Health > 0 then
                 if teamCheck and v.Team == plr.Team then continue end
                 local hrp = v.Character:FindFirstChild("HumanoidRootPart")
                 if hrp then
@@ -55,7 +55,7 @@ local function lockAim()
     svcs.RS:BindToRenderStep("Aimlock", Enum.RenderPriority.Camera.Value, function()
         if not locked then return end
         target = getClosest()
-        if target and target.Character then
+        if target and target.Character and target.Character:FindFirstChild("Humanoid") and target.Character.Humanoid.Health > 0 then
             local hrp = target.Character:FindFirstChild("HumanoidRootPart")
             local plrHRP = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
             if hrp and plrHRP then
@@ -85,3 +85,4 @@ btnTeamCheck.MouseButton1Click:Connect(toggleTeamCheck)
 svcs.UIS.InputBegan:Connect(function(input, gpe) 
     if not gpe and input.KeyCode == Enum.KeyCode.E then toggleLock() end 
 end)
+
